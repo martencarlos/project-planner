@@ -4,11 +4,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as  UserPlus} from "lucide-react";
+import { Calendar as UserPlus, Trash2 } from "lucide-react";
 
-// TeamModal Component
+const ROLES_WITH_RATES = {
+  'Project Manager': 85,
+  'Developer': 75,
+  'Designer': 65,
+  'QA Engineer': 55,
+  'Business Analyst': 70,
+  'DevOps Engineer': 80
+};
+
 const TeamModal = ({ team, setTeam }) => {
   const [open, setOpen] = useState(false);
   const [newMember, setNewMember] = useState({
@@ -18,20 +26,30 @@ const TeamModal = ({ team, setTeam }) => {
     hourlyRate: 0
   });
 
-  const roles = [
-    'Project Manager',
-    'Developer',
-    'Designer',
-    'QA Engineer',
-    'Business Analyst',
-    'DevOps Engineer'
-  ];
-
   const handleSubmit = (e) => {
     e.preventDefault();
     setTeam([...team, { ...newMember, id: Date.now().toString() }]);
-    setNewMember({ name: '', role: '', availability: 100, hourlyRate: 0 });
-    setOpen(false);
+    // Reset form but keep modal open
+    setNewMember({
+      name: '',
+      role: '',
+      availability: 100,
+      hourlyRate: 0
+    });
+  };
+
+  const handleRoleChange = (value) => {
+    setNewMember({
+      ...newMember,
+      role: value,
+      hourlyRate: ROLES_WITH_RATES[value] || 0
+    });
+  };
+
+  const handleDeleteMember = (memberId) => {
+    if (confirm('Are you sure you want to delete this team member?')) {
+      setTeam(team.filter(member => member.id !== memberId));
+    }
   };
 
   return (
@@ -57,14 +75,14 @@ const TeamModal = ({ team, setTeam }) => {
           </div>
           <div>
             <Label>Role</Label>
-            <Select onValueChange={(value) => setNewMember({ ...newMember, role: value })}>
+            <Select onValueChange={handleRoleChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                {roles.map((role) => (
+                {Object.entries(ROLES_WITH_RATES).map(([role, rate]) => (
                   <SelectItem key={role} value={role}>
-                    {role}
+                    {role} (€{rate}/hr)
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -94,15 +112,29 @@ const TeamModal = ({ team, setTeam }) => {
         
         <div className="mt-4">
           <h3 className="font-semibold mb-2">Current Team</h3>
-          <div className="space-y-2">
+          {/* Added max-height and overflow-y-auto for scrollable list */}
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
             {team.map((member) => (
-              <Card key={member.id}>
+              <Card key={member.id} className="group relative">
                 <CardContent className="p-4 flex justify-between items-center">
-                  <div>
+                  <div className="flex-1">
                     <p className="font-medium">{member.name}</p>
-                    <p className="text-sm text-gray-500">{member.role}</p>
+                    <p className="text-sm text-gray-500">
+                      {member.role} - €{member.hourlyRate}/hr
+                    </p>
                   </div>
-                  <Badge>{member.availability}%</Badge>
+                  {/* Adjusted layout for badge and delete button */}
+                  <div className="flex items-center gap-4 min-w-fit">
+                    <Badge>{member.availability}%</Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleDeleteMember(member.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
