@@ -28,6 +28,8 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
 
   const [open, setOpen] = useState(false);
   const [task, setTask] = useState(defaultTask);
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
 
   useEffect(() => {
     if (existingTask) {
@@ -61,6 +63,24 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
     'blocked',
     'on-hold'
   ];
+
+  const handleStartDateSelect = (date) => {
+    setTask(prev => ({
+      ...prev,
+      plannedStart: date,
+      plannedEnd: date > prev.plannedEnd ? date : prev.plannedEnd
+    }));
+    setStartDateOpen(false);
+    setEndDateOpen(true);
+  };
+
+  const handleEndDateSelect = (date) => {
+    setTask(prev => ({
+      ...prev,
+      plannedEnd: date
+    }));
+    setEndDateOpen(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -140,7 +160,7 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Planned Start Date</Label>
-              <Popover>
+              <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -157,7 +177,7 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
                   <Calendar
                     mode="single"
                     selected={task.plannedStart}
-                    onSelect={(date) => setTask({ ...task, plannedStart: date })}
+                    onSelect={handleStartDateSelect}
                     initialFocus
                   />
                 </PopoverContent>
@@ -166,7 +186,7 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
 
             <div>
               <Label>Planned End Date</Label>
-              <Popover>
+              <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -183,7 +203,8 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
                   <Calendar
                     mode="single"
                     selected={task.plannedEnd}
-                    onSelect={(date) => setTask({ ...task, plannedEnd: date })}
+                    onSelect={handleEndDateSelect}
+                    disabled={(date) => date < task.plannedStart}
                     initialFocus
                   />
                 </PopoverContent>
