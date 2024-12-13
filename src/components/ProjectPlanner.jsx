@@ -1,6 +1,6 @@
+// src/components/ProjectPlanner.jsx
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TeamModal from './TeamModal';
 import TaskModal from './TaskModal';
 import Gantt from './Gantt';
@@ -9,7 +9,6 @@ import useLocalStorage from '@/hooks/useLocalStorage';
 
 const ProjectPlanner = () => {
   // State management
-  const [view, setView] = useState('Week');
   const [team, setTeam] = useLocalStorage('projectTeam', []);
   const [tasks, setTasks] = useLocalStorage('projectTasks', [
     {
@@ -43,25 +42,11 @@ const ProjectPlanner = () => {
     ));
   };
 
-  const handleViewChange = (newView) => {
-    setView(newView);
-  };
-
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Project Planner</h1>
         <div className="flex gap-4 items-center">
-          <Select value={view} onValueChange={handleViewChange}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Day">Daily</SelectItem>
-              <SelectItem value="Week">Weekly</SelectItem>
-              <SelectItem value="Month">Monthly</SelectItem>
-            </SelectContent>
-          </Select>
           <TeamModal team={team} setTeam={setTeam} />
           <TaskModal 
             team={team} 
@@ -88,7 +73,6 @@ const ProjectPlanner = () => {
               actualStart: task.actualStart ? new Date(task.actualStart) : null,
               actualEnd: task.actualEnd ? new Date(task.actualEnd) : null,
             }))}
-            view={view}
             onTaskClick={handleTaskClick}
             onTaskComplete={handleTaskComplete}
           />

@@ -1,3 +1,4 @@
+// src/components/Gantt.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   format, addDays, eachDayOfInterval, startOfWeek, endOfWeek, 
@@ -6,8 +7,10 @@ import {
   startOfYear, endOfYear, getWeek, min, max
 } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const Gantt = ({ tasks = [], view = 'Week', onTaskClick }) => {
+const Gantt = ({ tasks = [], onTaskClick }) => {
+  const [view, setView] = useState('Week');
   const [timeBlocks, setTimeBlocks] = useState([]);
   const [hoveredTask, setHoveredTask] = useState(null);
   const containerRef = useRef(null);
@@ -146,8 +149,18 @@ const Gantt = ({ tasks = [], view = 'Week', onTaskClick }) => {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle>Project Timeline</CardTitle>
+        <Select value={view} onValueChange={setView}>
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Day">Daily</SelectItem>
+            <SelectItem value="Week">Weekly</SelectItem>
+            <SelectItem value="Month">Monthly</SelectItem>
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent className="p-0 overflow-x-auto">
         <div ref={containerRef} className="relative">
@@ -204,7 +217,7 @@ const Gantt = ({ tasks = [], view = 'Week', onTaskClick }) => {
             
             {/* Phases and Tasks */}
             {Object.entries(tasksByPhase).map(([phase, phaseTasks], phaseIndex) => {
-              let currentRowIndex = getRowIndex(phaseIndex, -1); // Get row index for phase header
+              let currentRowIndex = getRowIndex(phaseIndex, -1);
               
               return (
                 <g key={phase}>
