@@ -60,84 +60,90 @@ const TeamModal = ({ team, setTeam }) => {
           Manage Team
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>Team Management</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label>Name</Label>
-            <Input
-              value={newMember.name}
-              onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label>Role</Label>
-            <Select onValueChange={handleRoleChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(ROLES_WITH_RATES).map(([role, rate]) => (
-                  <SelectItem key={role} value={role}>
-                    {role} (€{rate}/hr)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Availability (%)</Label>
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              value={newMember.availability}
-              onChange={(e) => setNewMember({ ...newMember, availability: parseInt(e.target.value) })}
-            />
-          </div>
-          <div>
-            <Label>Hourly Rate (€)</Label>
-            <Input
-              type="number"
-              min="0"
-              value={newMember.hourlyRate}
-              onChange={(e) => setNewMember({ ...newMember, hourlyRate: parseFloat(e.target.value) })}
-            />
-          </div>
-          <Button type="submit">Add Team Member</Button>
-        </form>
         
-        <div className="mt-4">
-          <h3 className="font-semibold mb-2">Current Team</h3>
-          {/* Added max-height and overflow-y-auto for scrollable list */}
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-            {team.map((member) => (
-              <Card key={member.id} className="group relative">
-                <CardContent className="p-4 flex justify-between items-center">
-                  <div className="flex-1">
-                    <p className="font-medium">{member.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {member.role} - €{member.hourlyRate}/hr
-                    </p>
-                  </div>
-                  {/* Adjusted layout for badge and delete button */}
-                  <div className="flex items-center gap-4 min-w-fit">
-                    <Badge>{member.availability}%</Badge>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleDeleteMember(member.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Main content container with grid layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left side - Add member form */}
+          <div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={newMember.name}
+                  onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label>Role</Label>
+                <Select onValueChange={handleRoleChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(ROLES_WITH_RATES).map(([role, rate]) => (
+                      <SelectItem key={role} value={role}>
+                        {role} (€{rate}/hr)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Availability (%)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={newMember.availability}
+                  onChange={(e) => setNewMember({ ...newMember, availability: parseInt(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label>Hourly Rate (€)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={newMember.hourlyRate}
+                  onChange={(e) => setNewMember({ ...newMember, hourlyRate: parseFloat(e.target.value) })}
+                />
+              </div>
+              <Button type="submit">Add Team Member</Button>
+            </form>
+          </div>
+
+          {/* Right side - Team list */}
+          <div className="flex flex-col">
+            <h3 className="font-semibold mb-2">Current Team</h3>
+            <div className="space-y-2 overflow-y-auto max-h-[400px] pr-2">
+              {team.map((member) => (
+                <Card key={member.id} className="group relative">
+                  <CardContent className="p-4 flex justify-between items-center">
+                    <div className="flex-1">
+                      <p className="font-medium">{member.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {member.role} - €{member.hourlyRate}/hr
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4 min-w-fit">
+                      <Badge>{member.availability}%</Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleDeleteMember(member.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
       </DialogContent>
