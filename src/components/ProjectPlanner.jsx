@@ -1,26 +1,16 @@
 // src/components/ProjectPlanner.jsx
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs";
 import TeamModal from './TeamModal';
 import TaskModal from './TaskModal';
 import Gantt from './Gantt';
 import Dashboard from './Dashboard';
-import useLocalStorage from '@/hooks/useLocalStorage';
+import { useTeam } from '../hooks/useTeam';
+import { useTasks } from '../hooks/useTasks';
 
 const ProjectPlanner = () => {
-  // State management
-  const [team, setTeam] = useLocalStorage('projectTeam', []);
-  const [tasks, setTasks] = useLocalStorage('projectTasks', [
-    {
-      id: '1',
-      name: 'Sample Task',
-      plannedStart: new Date().toISOString(),
-      plannedEnd: new Date(Date.now() + 86400000).toISOString(),
-      status: 'pending',
-      phase: 'planning',
-      assignedTo: ''
-    }
-  ]);
+  const { team, loading: teamLoading, error: teamError, addTeamMember, deleteTeamMember } = useTeam();
+  const { tasks, loading: tasksLoading, error: tasksError, addTask, updateTask, deleteTask } = useTasks();
   const [selectedTask, setSelectedTask] = useState(null);
   const [activeTab, setActiveTab] = useState('gantt');
 
@@ -34,26 +24,48 @@ const ProjectPlanner = () => {
     }
   };
 
-  const handleTaskComplete = (taskId) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId 
-        ? { ...task, status: 'completed', actualEnd: new Date().toISOString() }
-        : task
-    ));
+  const handleTaskComplete = async (taskId) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      await updateTask(taskId, {
+        ...task,
+        status: 'completed',
+        actualEnd: new Date().toISOString()
+      });
+    }
   };
+
+  // Show loading state
+  if (teamLoading || tasksLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  // Show error state
+  if (teamError || tasksError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-red-500">
+        Error: {teamError || tasksError}
+      </div>
+    );
+  }
 
   return (
     <>
-      {/* Main content with higher z-index */}
       <div className="p-6 max-w-7xl mx-auto relative z-10">
         <header className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Project Planner</h1>
           <div className="flex gap-4 items-center">
-            <TeamModal team={team} setTeam={setTeam} />
+            <TeamModal 
+              team={team} 
+              onAdd={addTeamMember}
+              onDelete={deleteTeamMember}
+            />
             <TaskModal 
               team={team} 
-              tasks={tasks} 
-              setTasks={setTasks}
+              tasks={tasks}
+              onAdd={addTask}
+              onUpdate={updateTask}
+              onDelete={deleteTask}
               existingTask={selectedTask}
               onClose={() => setSelectedTask(null)}
             />
@@ -89,12 +101,10 @@ const ProjectPlanner = () => {
         </Tabs>
       </div>
 
-      {/* Click capture for deselecting tasks */}
       <div 
         className="fixed inset-0" 
         style={{ zIndex: 0 }}
         onClick={(e) => {
-          // Only deselect if clicking directly on this div
           if (e.target === e.currentTarget) {
             setSelectedTask(null);
           }
