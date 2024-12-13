@@ -773,6 +773,7 @@ import { Button } from "@components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@components/ui/dialog";
 import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
+import { Textarea } from "@components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
 import { Calendar } from "@components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover";
@@ -797,6 +798,8 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
 
   const [open, setOpen] = useState(false);
   const [task, setTask] = useState(defaultTask);
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
 
   useEffect(() => {
     if (existingTask) {
@@ -830,6 +833,24 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
     'blocked',
     'on-hold'
   ];
+
+  const handleStartDateSelect = (date) => {
+    setTask(prev => ({
+      ...prev,
+      plannedStart: date,
+      plannedEnd: date > prev.plannedEnd ? date : prev.plannedEnd
+    }));
+    setStartDateOpen(false);
+    setEndDateOpen(true);
+  };
+
+  const handleEndDateSelect = (date) => {
+    setTask(prev => ({
+      ...prev,
+      plannedEnd: date
+    }));
+    setEndDateOpen(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -909,7 +930,7 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Planned Start Date</Label>
-              <Popover>
+              <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -926,7 +947,7 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
                   <Calendar
                     mode="single"
                     selected={task.plannedStart}
-                    onSelect={(date) => setTask({ ...task, plannedStart: date })}
+                    onSelect={handleStartDateSelect}
                     initialFocus
                   />
                 </PopoverContent>
@@ -935,7 +956,7 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
 
             <div>
               <Label>Planned End Date</Label>
-              <Popover>
+              <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -952,7 +973,8 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
                   <Calendar
                     mode="single"
                     selected={task.plannedEnd}
-                    onSelect={(date) => setTask({ ...task, plannedEnd: date })}
+                    onSelect={handleEndDateSelect}
+                    disabled={(date) => date < task.plannedStart}
                     initialFocus
                   />
                 </PopoverContent>
@@ -1000,7 +1022,7 @@ const TaskModal = ({ team, tasks, setTasks, existingTask = null }) => {
 
           <div>
             <Label>Description</Label>
-            <Input
+            <Textarea 
               value={task.description}
               onChange={(e) => setTask({ ...task, description: e.target.value })}
               placeholder="Enter task description"
@@ -1124,11 +1146,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as  UserPlus} from "lucide-react";
+import { Calendar as UserPlus, Trash2 } from "lucide-react";
 
-// TeamModal Component
+const ROLES_WITH_RATES = {
+  'Project Manager': 85,
+  'Developer': 75,
+  'Designer': 65,
+  'QA Engineer': 55,
+  'Business Analyst': 70,
+  'DevOps Engineer': 80
+};
+
 const TeamModal = ({ team, setTeam }) => {
   const [open, setOpen] = useState(false);
   const [newMember, setNewMember] = useState({
@@ -1138,20 +1168,30 @@ const TeamModal = ({ team, setTeam }) => {
     hourlyRate: 0
   });
 
-  const roles = [
-    'Project Manager',
-    'Developer',
-    'Designer',
-    'QA Engineer',
-    'Business Analyst',
-    'DevOps Engineer'
-  ];
-
   const handleSubmit = (e) => {
     e.preventDefault();
     setTeam([...team, { ...newMember, id: Date.now().toString() }]);
-    setNewMember({ name: '', role: '', availability: 100, hourlyRate: 0 });
-    setOpen(false);
+    // Reset form but keep modal open
+    setNewMember({
+      name: '',
+      role: '',
+      availability: 100,
+      hourlyRate: 0
+    });
+  };
+
+  const handleRoleChange = (value) => {
+    setNewMember({
+      ...newMember,
+      role: value,
+      hourlyRate: ROLES_WITH_RATES[value] || 0
+    });
+  };
+
+  const handleDeleteMember = (memberId) => {
+    if (confirm('Are you sure you want to delete this team member?')) {
+      setTeam(team.filter(member => member.id !== memberId));
+    }
   };
 
   return (
@@ -1162,70 +1202,90 @@ const TeamModal = ({ team, setTeam }) => {
           Manage Team
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>Team Management</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label>Name</Label>
-            <Input
-              value={newMember.name}
-              onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label>Role</Label>
-            <Select onValueChange={(value) => setNewMember({ ...newMember, role: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Availability (%)</Label>
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              value={newMember.availability}
-              onChange={(e) => setNewMember({ ...newMember, availability: parseInt(e.target.value) })}
-            />
-          </div>
-          <div>
-            <Label>Hourly Rate (€)</Label>
-            <Input
-              type="number"
-              min="0"
-              value={newMember.hourlyRate}
-              onChange={(e) => setNewMember({ ...newMember, hourlyRate: parseFloat(e.target.value) })}
-            />
-          </div>
-          <Button type="submit">Add Team Member</Button>
-        </form>
         
-        <div className="mt-4">
-          <h3 className="font-semibold mb-2">Current Team</h3>
-          <div className="space-y-2">
-            {team.map((member) => (
-              <Card key={member.id}>
-                <CardContent className="p-4 flex justify-between items-center">
-                  <div>
-                    <p className="font-medium">{member.name}</p>
-                    <p className="text-sm text-gray-500">{member.role}</p>
-                  </div>
-                  <Badge>{member.availability}%</Badge>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Main content container with grid layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left side - Add member form */}
+          <div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={newMember.name}
+                  onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label>Role</Label>
+                <Select onValueChange={handleRoleChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(ROLES_WITH_RATES).map(([role, rate]) => (
+                      <SelectItem key={role} value={role}>
+                        {role} (€{rate}/hr)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Availability (%)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={newMember.availability}
+                  onChange={(e) => setNewMember({ ...newMember, availability: parseInt(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label>Hourly Rate (€)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={newMember.hourlyRate}
+                  onChange={(e) => setNewMember({ ...newMember, hourlyRate: parseFloat(e.target.value) })}
+                />
+              </div>
+              <Button type="submit">Add Team Member</Button>
+            </form>
+          </div>
+
+          {/* Right side - Team list */}
+          <div className="flex flex-col">
+            <h3 className="font-semibold mb-2">Current Team</h3>
+            <div className="space-y-2 overflow-y-auto max-h-[400px] pr-2">
+              {team.map((member) => (
+                <Card key={member.id} className="group relative">
+                  <CardContent className="p-4 flex justify-between items-center">
+                    <div className="flex-1">
+                      <p className="font-medium">{member.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {member.role} - €{member.hourlyRate}/hr
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4 min-w-fit">
+                      <Badge>{member.availability}%</Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleDeleteMember(member.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
       </DialogContent>
@@ -1819,6 +1879,30 @@ const TabsContent = React.forwardRef(({ className, ...props }, ref) => (
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
 export { Tabs, TabsList, TabsTrigger, TabsContent }
+
+```
+
+# src\components\ui\textarea.jsx
+
+```jsx
+import * as React from "react"
+
+import { cn } from "@components/lib/utils"
+
+const Textarea = React.forwardRef(({ className, ...props }, ref) => {
+  return (
+    (<textarea
+      className={cn(
+        "flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        className
+      )}
+      ref={ref}
+      {...props} />)
+  );
+})
+Textarea.displayName = "Textarea"
+
+export { Textarea }
 
 ```
 
