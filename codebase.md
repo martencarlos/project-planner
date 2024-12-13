@@ -700,55 +700,64 @@ const ProjectPlanner = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <header className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Project Planner</h1>
-        <div className="flex gap-4 items-center">
-          <TeamModal team={team} setTeam={setTeam} />
-          <TaskModal 
-            team={team} 
-            tasks={tasks} 
-            setTasks={setTasks}
-            existingTask={selectedTask}
-            onClose={() => setSelectedTask(null)}
-          />
-        </div>
-      </header>
+    <>
+      {/* Main content with higher z-index */}
+      <div className="p-6 max-w-7xl mx-auto relative z-10">
+        <header className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Project Planner</h1>
+          <div className="flex gap-4 items-center">
+            <TeamModal team={team} setTeam={setTeam} />
+            <TaskModal 
+              team={team} 
+              tasks={tasks} 
+              setTasks={setTasks}
+              existingTask={selectedTask}
+              onClose={() => setSelectedTask(null)}
+            />
+          </div>
+        </header>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="gantt">Gantt Chart</TabsTrigger>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-        </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="gantt">Gantt Chart</TabsTrigger>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="gantt" className="space-y-4">
-          <Gantt
-            tasks={tasks.map(task => ({
-              ...task,
-              plannedStart: new Date(task.plannedStart),
-              plannedEnd: new Date(task.plannedEnd),
-              actualStart: task.actualStart ? new Date(task.actualStart) : null,
-              actualEnd: task.actualEnd ? new Date(task.actualEnd) : null,
-            }))}
-            onTaskClick={handleTaskClick}
-            onTaskComplete={handleTaskComplete}
-          />
-        </TabsContent>
+          <TabsContent value="gantt" className="space-y-4">
+            <Gantt
+              tasks={tasks.map(task => ({
+                ...task,
+                plannedStart: new Date(task.plannedStart),
+                plannedEnd: new Date(task.plannedEnd),
+                actualStart: task.actualStart ? new Date(task.actualStart) : null,
+                actualEnd: task.actualEnd ? new Date(task.actualEnd) : null,
+              }))}
+              onTaskClick={handleTaskClick}
+              onTaskComplete={handleTaskComplete}
+            />
+          </TabsContent>
 
-        <TabsContent value="dashboard">
-          <Dashboard 
-            tasks={tasks} 
-            team={team}
-          />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="dashboard">
+            <Dashboard 
+              tasks={tasks} 
+              team={team}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Click capture for deselecting tasks */}
       <div 
-        className="fixed inset-0 -z-10" 
-        onClick={() => setSelectedTask(null)}
+        className="fixed inset-0" 
+        style={{ zIndex: 0 }}
+        onClick={(e) => {
+          // Only deselect if clicking directly on this div
+          if (e.target === e.currentTarget) {
+            setSelectedTask(null);
+          }
+        }}
       />
-    </div>
+    </>
   );
 };
 
